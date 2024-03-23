@@ -2,335 +2,216 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-void main() => runApp(MyApp());
+final startColor = Color(0xFFaa7ce4);
+final endColor = Color.fromARGB(255, 88, 19, 43);
+final titleColor = Color.fromARGB(255, 196, 38, 38);
+final textColor = Color.fromARGB(255, 162, 192, 53);
+final shadowColor = Color(0xffe9e9f4);
+
+void main() {
+  runApp(MyApp());
+}
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
-      ),
-      home: MyHomePage(title: 'Profile'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  late Future<User> futureUser;
-
-  @override
-  void initState() {
-    super.initState();
-    futureUser = fetchUser();
-  }
-
-  Future<User> fetchUser() async {
-    final response = await http.get(Uri.parse('https://randomuser.me/api/'));
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = json.decode(response.body);
-      final userJson = data['results'][0];
-      return User.fromJson(userJson);
-    } else {
-      throw Exception('Failed to load user');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: FutureBuilder<User>(
-        future: futureUser,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return profile(snapshot.data!);
-          } else if (snapshot.hasError) {
-            return Center(child: Text("${snapshot.error}"));
-          }
-          return Center(child: CircularProgressIndicator());
-        },
-      ),
-    );
-  }
-
-  Widget profile(User user) {
-    var height = MediaQuery.of(context).size.height;
-    var width = MediaQuery.of(context).size.width;
-    return Container(
-      child: Stack(
-        alignment: Alignment.center,
-        children: <Widget>[
-          Container(
-            decoration: BoxDecoration(
-                image: DecorationImage(
-              image: NetworkImage(
-                  "https://image.shutterstock.com/image-photo/red-sunset-mountains-landscape-sunny-260nw-234300205.jpg"),
-              fit: BoxFit.cover,
-            )),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              height: height / 1.3,
+      home: Scaffold(
+        body: Stack(
+          children: <Widget>[
+            Container(
+              height: 180,
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(40.0),
-                  topRight: Radius.circular(40.0),
+                  gradient: LinearGradient(colors: [startColor, endColor])),
+            ),
+            Positioned(
+              top: 0,
+              right: 0,
+              left: 0,
+              child: Container(
+                height: 80,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20, left: 20),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.dehaze,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {},
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20, right: 20),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.edit,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {},
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
+            Center(
+              child: Container(
+                child: FutureBuilder<User>(
+                  future: fetchUser(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return ProfileDetails(user: snapshot.data!);
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text("${snapshot.error}"));
+                    }
+                    return Center(child: CircularProgressIndicator());
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Future<User> fetchUser() async {
+  final response = await http.get(Uri.parse('https://randomuser.me/api/'));
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> data = json.decode(response.body);
+    final userJson = data['results'][0];
+    return User.fromJson(userJson);
+  } else {
+    throw Exception('Failed to load user');
+  }
+}
+
+class ProfileDetails extends StatelessWidget {
+  final User user;
+
+  const ProfileDetails({Key? key, required this.user}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        SizedBox(
+          height: 20,
+        ),
+        Container(
+          height: 130,
+          width: 130,
+          decoration: BoxDecoration(
+              image: DecorationImage(
+                  image: NetworkImage(user.picture), fit: BoxFit.fill),
+              borderRadius: BorderRadius.circular(100),
+              border: Border.all(
+                  color: Colors.blueAccent.withOpacity(.2), width: 1)),
+        ),
+        SizedBox(
+          height: 10,
+        ),
+        Text(
+          '${user.firstName} ${user.lastName}',
+          style: TextStyle(
+            color: titleColor,
+            fontSize: 20,
           ),
-          Positioned(
-            top: height / 7.5,
-            child: Column(
-              children: <Widget>[
-                Container(
-                  height: height / 5,
-                  width: height / 5,
-                  decoration: BoxDecoration(
-                      image: DecorationImage(
-                          image: NetworkImage(user.picture), fit: BoxFit.cover),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black54,
-                          blurRadius: 5.0,
-                          spreadRadius: 2.0,
-                          offset: Offset(0, 1),
-                        )
-                      ],
-                      color: Colors.white,
-                      shape: BoxShape.circle),
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                Container(
-                  child: Text(
-                    '${user.firstName} ${user.lastName}',
-                    style: TextStyle(fontSize: 30, fontFamily: 'OpenSans'),
-                  ),
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                Container(
-                  child: Text(
-                    'Athlete',
-                    style: TextStyle(fontSize: 20, color: Colors.black45),
-                  ),
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                Container(
-                    child: Text(
-                  'Welcome to the official page of ${user.firstName} ${user.lastName}',
-                  style: TextStyle(
-                    fontSize: 17,
-                  ),
-                )),
-                SizedBox(
-                  height: 10,
-                ),
-                Row(
-                  children: <Widget>[
-                    SizedBox(
-                      height: height / 16,
-                      width: width / 4,
-                      child: MaterialButton(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50)),
-                        color: Colors.deepPurple,
-                        onPressed: () {},
-                        child: Text(
-                          'Follow',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 20,
-                    ),
-                    SizedBox(
-                      width: width / 4,
-                      height: height / 16.5,
-                      child: OutlinedButton(
-                        onPressed: () {},
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(50.0)),
-                          side:
-                              BorderSide(color: Colors.deepPurple, width: 2.0),
-                        ),
-                        child: Text('Message'),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                Row(
-                  children: <Widget>[
-                    Container(
-                      child: Column(
-                        children: <Widget>[
-                          Text(
-                            '128M',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            'Followers',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(
-                      width: 50,
-                    ),
-                    Container(
-                      child: Column(
-                        children: <Widget>[
-                          Text(
-                            '492',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            'Posts',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(
-                      width: 50,
-                    ),
-                    Container(
-                      child: Column(
-                        children: <Widget>[
-                          Text(
-                            '226',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            'Following',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                Container(
-                  height: 40,
-                  width: width,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        ),
+        SizedBox(
+          height: 10,
+        ),
+        Container(
+          margin: EdgeInsets.only(top: 30),
+          padding: EdgeInsets.only(left: 30, right: 20, top: 8),
+          width: 320,
+          height: 200,
+          decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withOpacity(.1),
+                    blurRadius: 30,
+                    spreadRadius: 5)
+              ],
+              borderRadius: BorderRadius.circular(10)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Container(
-                        child: Icon(
-                          Icons.grid_on,
-                          color: Colors.white,
-                          size: 35,
+                      Text(
+                        'Gender',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 18,
                         ),
-                      ),
-                      Container(
-                        child: Icon(
-                          Icons.account_box,
-                          size: 35,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.deepPurple,
-                    shape: BoxShape.rectangle,
-                  ),
-                ),
-                SizedBox(
-                  height: 10,
-                ),
-                Container(
-                  child: Row(
-                    children: <Widget>[
-                      Container(
-                        width: width / 2.2,
-                        height: height / 4.5,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(20),
-                            ),
-                            image: DecorationImage(
-                                image: AssetImage('images/1.jpg'),
-                                fit: BoxFit.cover),
-                            boxShadow: [
-                              BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 2.0,
-                                  spreadRadius: 3.0)
-                            ]),
                       ),
                       SizedBox(
-                        width: 15,
+                        height: 3,
                       ),
-                      Container(
-                        width: width / 2.2,
-                        height: height / 4.5,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(20),
-                            ),
-                            image: DecorationImage(
-                                image: AssetImage('images/3.jpg'),
-                                fit: BoxFit.cover),
-                            boxShadow: [
-                              BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 2.0,
-                                  spreadRadius: 3.0)
-                            ]),
-                      ),
+                      Text(
+                        user.gender,
+                        style: TextStyle(
+                          color: Colors.black,
+                        ),
+                      )
                     ],
                   ),
-                )
-              ],
-            ),
+                  Column(
+                    children: <Widget>[
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Row(
+                        children: <Widget>[
+                          IconButton(
+                              icon: Icon(
+                                Icons.location_on,
+                                size: 20,
+                              ),
+                              onPressed: () {}),
+                          IconButton(
+                              icon: Icon(
+                                Icons.location_on,
+                                size: 20,
+                              ),
+                              onPressed: () {}),
+                        ],
+                      )
+                    ],
+                  )
+                ],
+              ),
+              Text(
+                'Location',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 18,
+                ),
+              ),
+              SizedBox(
+                height: 3,
+              ),
+              Text(
+                '${user.city}, ${user.country}',
+                style: TextStyle(
+                  color: Colors.black,
+                ),
+              )
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -338,19 +219,27 @@ class _MyHomePageState extends State<MyHomePage> {
 class User {
   final String firstName;
   final String lastName;
+  final String gender;
+  final String city;
+  final String country;
   final String picture;
 
   User({
     required this.firstName,
     required this.lastName,
+    required this.gender,
+    required this.city,
+    required this.country,
     required this.picture,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    final name = json['name'];
     return User(
-      firstName: name['first'],
-      lastName: name['last'],
+      firstName: json['name']['first'],
+      lastName: json['name']['last'],
+      gender: json['gender'],
+      city: json['location']['city'],
+      country: json['location']['country'],
       picture: json['picture']['large'],
     );
   }
